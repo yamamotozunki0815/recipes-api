@@ -23,8 +23,8 @@ var recipes []Recipe
 
 func init() {
 	recipes = make([]Recipe, 0)
-	file, _ := ioutil.ReadFile("recipes.json")
-	_ = json.Unmarshal([]byte(file), &recipes)
+	file, _ := ioutil.ReadFile("recipes.json") //load recipes.json to byte slice
+	_ = json.Unmarshal([]byte(file), &recipes) //using that file(byte slice type),convert Recipe struct type array, then add to recipes(slice)
 }
 
 func NewRecipeHandler(c *gin.Context) {
