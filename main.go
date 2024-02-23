@@ -21,8 +21,8 @@ type Recipe struct {
 	Name         string             `json:"name" bson:"name"`
 	Tags         []string           `json:"tags" bson:"tags"`
 	Ingredients  []string           `json:"ingredients" bson:"ingredients"`
-	Instructions []string           `json:"instructions"`
-	PublishedAt  time.Time          `json:"publishedAt"`
+	Instructions []string           `json:"instructions" bson:"instructions"`
+	PublishedAt  time.Time          `json:"publishedAt" bson:"publishedAt"`
 }
 
 var recipes []Recipe
