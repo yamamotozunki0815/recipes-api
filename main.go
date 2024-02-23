@@ -128,22 +128,35 @@ func DeleteRecipeHandler(c *gin.Context) {
 }
 
 func SearchRecipesHandler(c *gin.Context) {
-	tag := c.Query("tag")
-	listOfRecipes := make([]Recipe, 0)
 
-	for i := 0; i < len(recipes); i++ {
+	tag := c.Query("tag")
+	collection := client.Database("db").Collection("recipes")
+	cur, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer cur.Close(ctx)
+	listOfRecipes := make([]Recipe, 0)
+	recipes := make([]Recipe, 0)
+	for cur.Next(ctx) {
+		var recipe Recipe
+		cur.Decode(&recipe)
+		listOfRecipes = append(listOfRecipes, recipe)
+	}
+	for i := 0; i < len(listOfRecipes); i++ {
 		found := false
-		for _, t := range recipes[i].Tags {
+		for _, t := range listOfRecipes[i].Tags {
 			if strings.EqualFold(t, tag) {
 				found = true
 			}
 		}
 		if found {
-			listOfRecipes = append(listOfRecipes, recipes[i])
+			recipes = append(recipes, listOfRecipes[i])
 		}
 	}
 
-	c.JSON(http.StatusOK, listOfRecipes)
+	c.JSON(http.StatusOK, recipes)
 }
 
 func main() {
