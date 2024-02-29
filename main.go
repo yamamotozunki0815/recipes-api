@@ -6,6 +6,8 @@ import (
 
 	"recipes/handlers"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,6 +19,8 @@ var err error
 var client *mongo.Client //The mongo.Client type is provided by the MongoDB Go driver and is used for interacting with a MongoDB database.
 
 var recipesHandler *handlers.RecipesHandler
+
+var authHandler *handlers.AuthHandler
 
 func init() {
 	// Connect to MongoDB
@@ -31,15 +35,31 @@ func init() {
 
 	collection := client.Database("db").Collection("recipes")
 	recipesHandler = handlers.NewRecipesHandler(ctx, collection)
+	// authHandler = &handlers.AuthHandler{}
+
+	collectionUsers := client.Database("db").Collection("users")
+	authHandler = handlers.NewAuthHandler(ctx, collectionUsers)
 
 }
 
 func main() {
 	router := gin.Default()
-	router.POST("/recipes", recipesHandler.NewRecipeHandler)
+
+	store := cookie.NewStore([]byte("secret"))
+	router.Use(sessions.Sessions("recupes_api", store))
 	router.GET("/recipes", recipesHandler.ListRecipesHandler)
-	router.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
-	router.DELETE("recipes/:id", recipesHandler.DeleteRecipeHandler)
-	router.GET("/recipes/search", recipesHandler.SearchRecipesHandler)
+	router.POST("/signin", authHandler.SignInHandler)
+	router.POST("/refresh", authHandler.RefreshHandler)
+	router.POST("/signout", authHandler.SignOutHandler)
+
+	authorized := router.Group("/")
+	authorized.Use(authHandler.AuthMiddleware())
+	{
+		authorized.POST("/recipes", recipesHandler.NewRecipeHandler)
+		authorized.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
+		authorized.DELETE("recipes/:id", recipesHandler.DeleteRecipeHandler)
+		authorized.GET("/recipes/search", recipesHandler.SearchRecipesHandler)
+	}
 	router.Run()
+
 }

@@ -45,6 +45,7 @@ func (handler *RecipesHandler) ListRecipesHandler(c *gin.Context) {
 }
 
 func (handler *RecipesHandler) NewRecipeHandler(c *gin.Context) {
+
 	var recipe models.Recipe
 
 	if err := c.ShouldBindJSON(&recipe); err != nil {
